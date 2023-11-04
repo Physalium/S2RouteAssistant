@@ -13,28 +13,60 @@
 </head>
 <body>
 <div id="controlPanel">
-	<button type="button" class="btn btn-info controlButton" id="searchLocationButton" onClick="geocodeButton();">Search</button>
-	<button type="button" class="btn btn-info controlButton" id="resetMapButton" onClick="resetMap();">Reset</button><br/>
-</div>
-<p id="addressFoundContainer">Found:</p>
-<div id="foundLocationButtonContainer">
-	<button type="button" class="foundLocationButton btn btn-warning" id="addFoundLocationButton" onClick="addFoundLocation();">Add found</button>
-	<button type="button" class="foundLocationButton btn btn-warning" id="clearSearchButton" onClick="clearMarkers();">Clear</button>
-</div>
-<div id="allAddedLocationsButtonContainer">
-	<button type="button" id="allAddedLocationsButton" class="btn btn-info" onClick="showAllAddedLocationsList();">List of all added locations</button>
+	<button type="button" class="btn btn-info controlButton" id="searchLocationButton">Search</button>
+	<button type="button" class="btn btn-info controlButton" id="resetMapButton">Reset</button><br/>
 </div>
 
+
+<p id="addressFoundContainer">Found:</p>
+
+
+<div id="foundLocationButtonContainer">
+	<button type="button" class="foundLocationButton btn btn-warning" id="addFoundLocationButton">Add found</button>
+	<button type="button" class="foundLocationButton btn btn-warning" id="clearSearchButton" onClick="clearMarkers();">Clear</button>
+</div>
+
+
+<div id="allAddedLocationsButtonContainer">
+	<button type="button" id="allAddedLocationsButton" class="btn btn-info">List of all added locations</button>
+</div>
+
+
 <div id="map-canvas"></div>
+
+
 <div id="loadingPanel">
-	<div id="progressTitle">Calculating the best route<span id="progressTitleDots"></span></div>
+	<div id="progressTitle">Calculating the best route
+		<span id="progressTitleDots"></span>
+	</div>
 	<div id="loader"></div>
-	<!--<p id="progressDescription">1/5</p>-->
-	<!--<div id="progressBarDiv">
-		<progress id="progressBar" value="0" max="100" data-label="Value"></progress>
-	</div>-->
 	<div id="progress" data-label="0% Complete">
 		<span id="progressValue" style="width:0%;"></span>
+	</div>
+	<div id="estimatedTime"></div>
+</div>
+
+
+<div id="loadingPanelForListOfAllPoints">
+	<div id="loadingPanelForListOfAllPoints_progressTitle">Retriving addresses from your locations
+		<span id="loadingPanelForListOfAllPoints_progressTitleDots"></span>
+	</div>
+	<div id="loadingPanelForListOfAllPoints_loader"></div>
+	<div id="loadingPanelForListOfAllPoints_progress" data-label="0% Complete">
+		<span id="loadingPanelForListOfAllPoints_progressValue" style="width:0%;"></span>
+	</div>
+	<div id="loadingPanelForListOfAllPoints_estimatedTime"></div>
+</div>
+
+
+<div id='selectDriveMethodPanel'>
+	<button type="button" id="selectDriveMethodPanel_closeButton" class="btn btn-danger">Close</button>
+	<p id='selectDriveMethodPanel_Header'>Select a method:</p>
+	<div id='selectDriveMethodPanel_ButtonsContainer'>
+		<button id='selectDriveMethodPanel_Button_Driving' class="selectDriveMethodPanel_Button btn btn-primary" onClick="setTravelMode('DRIVING');">Driving</button>
+		<button id='selectDriveMethodPanel_Button_Bicycling' class="selectDriveMethodPanel_Button btn btn-primary" onClick="setTravelMode('BICYCLING');">Bicycling</button>
+		<button id='selectDriveMethodPanel_Button_Transit' class="selectDriveMethodPanel_Button btn btn-primary" onClick="setTravelMode('TRANSIT');">Transit</button>
+		<button id='selectDriveMethodPanel_Button_Walking' class="selectDriveMethodPanel_Button btn btn-primary" onClick="setTravelMode('WALKING');">Walking</button>
 	</div>
 </div>
 
@@ -43,7 +75,7 @@
 
 
 <div id="allAddedLocationsPanel">
-	<button id="allAddedLocationsPanelCloseButton" type="button" class="btn btn-danger" onClick="allAddedLocationsPanelCloseButtonAction();">Close</button>
+	<button id="allAddedLocationsPanelCloseButton" type="button" class="btn btn-danger">Close</button>
 	<p id="allAddedLocationsPanelHeader">List of all added locations</p>
 	<div id="allAddedLocationsPanelTableContainer">
 		<table id="allAddedLocationsPanelTable" class="table table-hover table-striped table-bordered">
@@ -67,19 +99,24 @@
 		<th>Distance</th>
 		<th>Duration</th>
 	</tr>
+	
 	<tr>
 		<td id="result_StartLocation">&#160;</td>
 		<td id="result_EndLocation">&#160;</td>
 		<td id="result_Distance">&#160;</td>
 		<td id="result_Duration">&#160;</td>
 	</tr>
+	
 	<tr>
-		<td colspan="5" style="padding: 0 !important;margin: 0 !important;height:9vh;font-size:24px"><button type="button" class="btn" style="width:100%;height:100%;border:none;font-size:18px;font-weight:bold" onClick="detailsPanelOpenButtonAction();">Details (click me)</button></td>
+		<td colspan="5" style="padding: 0 !important;margin: 0 !important;height:9vh;font-size:24px">
+			<button type="button" id="detailsPanelOpenButton" class="btn" style="width:100%;height:100%;border:none;font-size:18px;font-weight:bold">Details (click me)</button>
+		</td>
 	</tr>
 </table>
 
+
 <div id="panelWithDetails">
-	<button id="detailsPanelCloseButton" type="button" class="btn btn-danger" onClick="detailsPanelCloseButtonAction();">Close</button>
+	<button id="detailsPanelCloseButton" type="button" class="btn btn-danger">Close</button>
 	<p id="detailsPanelHeader">The best route details</p>
 	<div id="panelWithDetailsTable">
 		<table id="detailsTable" class="table table-hover table-striped table-bordered">
@@ -90,6 +127,7 @@
 				<th>Distance</th>
 				<th>Duration</th>
 			</tr>
+			
 			<tr>
 				<td id="detailedResult_StartLocation">&#160;</td>
 				<td id="detailedResult_EndLocation">&#160;</td>
@@ -109,10 +147,8 @@
 		</table>
 	</div>
 	<div id="actionButtonContainer">
-		<!--<button type="button" class="actionButton btn btn-primary" onClick="saveAsPDF();">Save as a PDF</button>
-		<button type="button" class="actionButton btn btn-primary" onClick="shareViaEmail();">Share via e-mail</button>
-		<button type="button" class="actionButton btn btn-primary">Print</button>-->
-		<button type="button" class="actionButton btn btn-primary" onClick="saveAsPDF();">Print / Save as a PDF</button>
+		<button type="button" class="actionButton btn btn-primary" id="gmap_btn">Open in Google Maps</button>
+		<button type="button" class="actionButton btn btn-primary" id="saveAsPDFbtn">Print / Save as a PDF</button>
 	</div>
 </div>
 <!--OWN JS-->
