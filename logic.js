@@ -1,5 +1,5 @@
 //-----DEFAULT MAP CONFIGURATION AND GLOBAL VARIABLES-----//
-var defaultMapCenter = new google.maps.LatLng(49.944630, 18.597937); //Jastrzebie-Zdroj
+var defaultMapCenter = new google.maps.LatLng(49.944630, 18.597937); //Jastrzebie-Zdroj, Silesian, Poland
 var mapOptions = {
 	zoom: 14,
 	center: defaultMapCenter
@@ -126,9 +126,14 @@ document.getElementById("allAddedLocationsButton").addEventListener('click',func
 function setTravelMode(method){
 	document.getElementById("selectDriveMethodPanel").style.display="none";
 	if(method=="DRIVING" || method=="BICYCLING" || method=="WALKING" || method=="TRANSIT"){
-		travelMode=method;
+		if(method=='TRANSIT' && points.length>2){
+			console.log("Error. TRANSIT can't have more than 2 points");
+			alert("TRANSIT can't have more than 2 points!");
+		}else{
+			travelMode=method;
+			calcRoute();
+		}
 	}
-	calcRoute();
 }
 
 
@@ -195,6 +200,7 @@ function estimateTimeCounterTimeout(i,iterations,waittime,divid){
 }
 
 
+
 function showAllAddedLocationsList(){
 }
 
@@ -232,7 +238,7 @@ function deletePointFromList(i){
 		}
 	}
 	
-	var tempStringWithTr="<tr><th>Location mark</th><th>Full ocation address</th><th>Delete</th></tr>";
+	var tempStringWithTr="<tr><th>Location mark</th><th>Full location address</th><th>Delete</th></tr>";
 	for(var y=0;y<selectedLocationsAddressesArray.length;y++){
 		tempStringWithTr+="<tr><td>"+y+"</td><td>"+selectedLocationsAddressesArray[y]+"</td><td style='text-align:center'><button type='button' class='btn btn-danger' style='width:50%' onClick='deletePointFromList("+y+");'>X</div></td></tr>";
 	}
@@ -245,6 +251,17 @@ function deletePointFromList(i){
 		var tempLocation=new google.maps.LatLng(points[y][0],points[y][1]);
 		addMarker(tempLocation,map);
 	}
+	
+	map.addListener("click", (mapsMouseEvent) => {
+		var latt=mapsMouseEvent.latLng.lat();
+		var lngg=mapsMouseEvent.latLng.lng();
+		points.push([latt,lngg]);
+		ends.push({
+			location:new google.maps.LatLng(latt,lngg),
+			stopover:true
+		});
+		addMarker(mapsMouseEvent.latLng,map);
+	});
 }
 
 
@@ -475,6 +492,10 @@ function calcRoute() {
 	function finishCalculation(i,k){
 		setTimeout(function(){
 			var indexOfThrBestRoute=distancesArray.indexOf(Math.min.apply(null,distancesArray));
+			if(indexOfThrBestRoute<0){
+				indexOfThrBestRoute=0;
+			}
+			var directionsArrayLength=directionsArray.length;
 			var bounds = new google.maps.LatLngBounds();
 			bounds.extend(start);
 			bounds.extend(end);
@@ -485,12 +506,15 @@ function calcRoute() {
 			var gmap_destination=""+end.lat()+","+end.lng()+"";
 			var gmap_waypoints="";
 			var gmap_travelmode="DRIVING";
-			if(directionsArray[indexOfThrBestRoute].length>0){
-				for(var t=0;t<directionsArray[indexOfThrBestRoute].length;t++){
-					if(t>=0 && t<directionsArray[indexOfThrBestRoute].length){
-						gmap_waypoints+=""+directionsArray[indexOfThrBestRoute][t].location.lat()+","+directionsArray[indexOfThrBestRoute][t].location.lng()+"|";
-					}else if(t==directionsArray[indexOfThrBestRoute].length){
-						gmap_waypoints+=""+directionsArray[indexOfThrBestRoute][t].location.lat()+","+directionsArray[indexOfThrBestRoute][t].location.lng()+"";
+			
+			if(directionsArrayLength>0){
+				if(directionsArray[indexOfThrBestRoute].length>0){
+					for(var t=0;t<directionsArray[indexOfThrBestRoute].length;t++){
+						if(t>=0 && t<directionsArray[indexOfThrBestRoute].length){
+							gmap_waypoints+=""+directionsArray[indexOfThrBestRoute][t].location.lat()+","+directionsArray[indexOfThrBestRoute][t].location.lng()+"|";
+						}else if(t==directionsArray[indexOfThrBestRoute].length){
+							gmap_waypoints+=""+directionsArray[indexOfThrBestRoute][t].location.lat()+","+directionsArray[indexOfThrBestRoute][t].location.lng()+"";
+						}
 					}
 				}
 			}
@@ -531,11 +555,19 @@ function calcRoute() {
 				};gmap_travelmode="driving";
 			}
 			var gmap_url="";//+-;
-			if(directionsArray[indexOfThrBestRoute].length>0){
-				gmap_url+=""+gmap_url_base+"origin="+gmap_origin+"&waypoints="+gmap_waypoints+"&destination="+gmap_destination+"&travelmode="+gmap_travelmode+"";
+			
+			if(directionsArrayLength>0){
+				if(directionsArray[indexOfThrBestRoute].length>0){
+					gmap_url+=""+gmap_url_base+"origin="+gmap_origin+"&waypoints="+gmap_waypoints+"&destination="+gmap_destination+"&travelmode="+gmap_travelmode+"";
+					console.log("eee1: "+gmap_url);
+				}else{
+					gmap_url+=""+gmap_url_base+"origin="+gmap_origin+"&destination="+gmap_destination+"&travelmode="+gmap_travelmode+"";
+					console.log("eee2: "+gmap_url);
+				}
 			}else{
-				gmap_url+=""+gmap_url_base+"origin="+gmap_origin+"&destination="+gmap_destination+"travelmode="+gmap_travelmode+"";
-			}
+					gmap_url+=""+gmap_url_base+"origin="+gmap_origin+"&destination="+gmap_destination+"&travelmode="+gmap_travelmode+"";
+					console.log("eee3: "+gmap_url);
+				}
 			
 			directionsService.route(request,function(response,status){
 				if(status==google.maps.DirectionsStatus.OK){
